@@ -135,7 +135,7 @@ const getImageOfTheDay = (state) => {
     // return data
 }
 
-const getCameras = (state) => {
+const getCameras = async (state) => {
     let { selectedRover } = state
 
     fetch(`http://localhost:3000/${selectedRover}/cameras`)

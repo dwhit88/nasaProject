@@ -9,29 +9,39 @@ let store = {
 }
 
 const root = document.getElementById('root')
-const curiosity = document.getElementById('Curiosity')
+// const curiosity = document.getElementById('Curiosity')
+
+const renderCameraList = (cameraList, store) => {
+    console.log(store)
+    cameraList.innerHTML = store.selectedRover.name
+    render(root, store)
+}
+
+const displayCameras = (roverName) => {
+    const cameraList = document.getElementById('cameraList')
+    getCameras(roverName)
+        .then(() => {
+            renderCameraList(cameraList, store)
+        })
+}
 
 // listening for load event because page should load before any JS is called
 window.addEventListener('load', () => {
     render(root, store)
+        .then(() => {
+            const curiosity = document.getElementById('Curiosity')
+            curiosity.addEventListener('click', () => {
+                displayCameras('Curiosity')
+            })
+        })
 })
-
-curiosity.addEventListener('click', () => {
-    render(root, store)
-})
-
-const updateStore = (store, newState) => {
-    store = Object.assign(store, newState)
-    render(root, store)
-    console.log(store)
-}
 
 const render = async (root, state) => {
     root.innerHTML = App(state)
 }
 
 const App = (state) => {
-    let { rovers, apod } = state
+    let { rovers, selectedRover } = state
 
     return `
         <header></header>
@@ -39,6 +49,8 @@ const App = (state) => {
             <section>
                 <h3>Select a rover!</h3>
                 ${Rovers(rovers)}
+                ${Cameras(selectedRover)}
+                <p id="cameraList"></p>
                 <p>Here is an example section.</p>
             </section>
         </main>
@@ -46,26 +58,44 @@ const App = (state) => {
     `
 }
 
+const clickRover = (rover) => {
+    var cameraList = document.getElementById('cameras')
+    console.log("hey hey")
+    // getCameras(store)
+
+    // cameraList.innerHTML = Cameras
+}
+
 const Rovers = (rovers) => {
     return `
-        <ul>
-            <li><a id="${rovers[0]}" href=''>${rovers[0]}</a></li>
-            <li>${rovers[1]}</li>
-            <li>${rovers[2]}</li>
-        </ul>
+        <button type="button" id="${rovers[0]}">${rovers[0]}</button>
+        <button type="button" id="${rovers[1]}">${rovers[1]}</button>
+        <button type="button" id="${rovers[2]}">${rovers[2]}</button>
     `
 }
 
-const Cameras = (rovers) => {
+const Cameras = (rover) => {
     return `
-        <p>${getCameras(rovers[0])}</p>
+        <p>${rover.name}</p>
     `
 }
 
-const getCameras = (state) => {
-    let { selectedRover } = state
+// const Cameras = (rovers) => {
+//     return `
+//         <p>${getCameras(rovers[0])}</p>
+//     `
+// }
 
-    fetch(`http://localhost:3000/${selectedRover}/cameras`)
+const updateStore = (oldStore, newState) => {
+    store = Object.assign(oldStore, newState)
+    // render(root, store)
+    // console.log(store)
+}
+
+const getCameras = async (roverName) => {
+    // let { selectedRover } = state
+
+    fetch(`http://localhost:3000/${roverName}/cameras`)
         .then(res => res.json())
         .then(selectedRover => updateStore(store, { selectedRover }))
 
