@@ -2,14 +2,31 @@ let store = {
     user: { name: "Student" },
     apod: '',
     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
+    selectedRover: {
+        name: '',
+        cameras: []
+    }
+}
+
+let roverStore = {
+    name: '',
+    cameras: []
 }
 
 // add our markup to the page
 const root = document.getElementById('root')
+const rovers = document.getElementById('rovers')
 
 const updateStore = (store, newState) => {
     store = Object.assign(store, newState)
     render(root, store)
+    console.log(store)
+}
+
+const updateRoverStore = (data) => {
+    roverStore.name = data.rover
+    roverStore.cameras = data.cameras
+    rovers.innerHTML = App(roverStore)
 }
 
 const render = async (root, state) => {
@@ -25,6 +42,9 @@ const App = (state) => {
         <header></header>
         <main>
             ${Greeting(store.user.name)}
+
+                ${Rovers(rovers)}
+
             <section>
                 <h3>Put things on the page!</h3>
                 <p>Here is an example section.</p>
@@ -63,15 +83,26 @@ const Greeting = (name) => {
     `
 }
 
+const Rovers = (rovers) => {
+    return `
+        <ul id="rovers">
+            <li>${rovers[0]}</li>
+            <li>${rovers[1]}</li>
+            <li>${rovers[2]}</li>
+        </ul>
+        <p>${getCameras(rovers[2])}</p>
+    `
+}
+
 // Example of a pure function that renders infomation requested from the backend
 const ImageOfTheDay = (apod) => {
 
     // If image does not already exist, or it is not from today -- request it again
     const today = new Date()
     const photodate = new Date(apod.date)
-    console.log(photodate.getDate(), today.getDate());
+    // console.log(photodate.getDate(), today.getDate());
 
-    console.log(photodate.getDate() === today.getDate());
+    // console.log(photodate.getDate() === today.getDate());
     if (!apod || apod.date === today.getDate() ) {
         getImageOfTheDay(store)
     }
@@ -101,5 +132,23 @@ const getImageOfTheDay = (state) => {
         .then(res => res.json())
         .then(apod => updateStore(store, { apod }))
 
-    return data
+    // return data
 }
+
+const getCameras = (state) => {
+    let { selectedRover } = state
+
+    fetch(`http://localhost:3000/${selectedRover}/cameras`)
+        .then(res => res.json())
+        .then(selectedRover => updateStore(store, { selectedRover }))
+
+    // return data
+}
+
+// const getCameras = (rover) => {
+//     fetch(`http://localhost:3000/${rover}/cameras`)
+//         .then(res => res.json())
+//         .then(data => updateRoverStore(data))
+
+//     // return data
+// }
