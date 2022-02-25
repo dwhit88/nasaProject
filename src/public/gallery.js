@@ -1,11 +1,6 @@
 let store = {
     user: { name: "Student" },
-    apod: '',
     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
-    selectedRover: {
-        name: '',
-        cameras: []
-    }
 }
 
 const root = document.getElementById('root')
@@ -15,6 +10,12 @@ const renderCameraList = async (store) => {
     cameraOptions.innerHTML = `<p>${store.selectedRover.rover}</p>`
 }
 
+const renderPhotos = async (store) => {
+    const photos = document.getElementById('photos')
+    photos.innerHTML = Photos(store)
+    console.log(store)
+}
+
 const renderRoverOptions = async (store) => {
     const roverOptions = document.getElementById('roverOptions')
     roverOptions.innerHTML = RoverOptions(store)
@@ -22,6 +23,7 @@ const renderRoverOptions = async (store) => {
     const curiosity = document.getElementById('Curiosity')
     curiosity.addEventListener('click', () => {
         getCameras('Curiosity')
+        getLatestPhotos('Curiosity')
     })
 
     const opportunity = document.getElementById('Opportunity')
@@ -56,19 +58,41 @@ const  RoverOptions = (state) => {
     `
 }
 
-const Cameras = (rover) => {
-    return `
-        <p>${rover.name}</p>
-    `
+const Photos = (store) => {
+    let photoItems = "<h3>Latest Photos!</h3>"
+
+    for (photo of store.photos.photos) {
+        photoItems += `
+            <p>Camera Type: ${photo.camera.full_name} (${photo.camera.name})</p>
+            <p>Earth Date: ${photo.earth_date}</p>
+            <p>Sol: ${photo.sol}</p>
+            <p>==========</p>
+        `
+    }
+
+    return photoItems
 }
 
 const updateStore = async (oldStore, newState) => {
     store = Object.assign(oldStore, newState)
     renderCameraList(store)
+    console.log(store)
+}
+
+const updateStoreWithPhotos = async (oldStore, newState) => {
+    store = Object.assign(oldStore, newState)
+    console.log(store)
+    renderPhotos(store)
 }
 
 const getCameras = async (roverName) => {
     fetch(`http://localhost:3000/${roverName}/cameras`)
         .then(res => res.json())
         .then(selectedRover => updateStore(store, { selectedRover }))
+}
+
+const getLatestPhotos = async (roverName, maxSol = 3395) => {
+    fetch(`http://localhost:3000/${roverName}/cameras/${maxSol}`)
+        .then(res => res.json())
+        .then(photos => updateStoreWithPhotos(store, { photos }))
 }
