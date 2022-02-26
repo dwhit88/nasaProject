@@ -5,32 +5,37 @@ let store = {
 
 // listening for load event because page should load before any JS is called
 window.addEventListener('load', () => {
-    renderRoverOptions(store)
+    render(store, 'load')
 })
 
 const root = document.getElementById('root')
 
-const renderRoverInfo = async (store) => {
-    const roverInfo = document.getElementById('roverInfo')
-    roverInfo.innerHTML = RoverInfo(store)
-}
+const render = async (store, event) => {
+    switch (event) {
+        case 'load':
+            const roverOptions = document.getElementById('roverOptions')
+            roverOptions.innerHTML = RoverOptions(store)
 
-const renderPhotos = async (store) => {
-    const photos = document.getElementById('photos')
-    photos.innerHTML = Photos(store)
-}
-
-const renderRoverOptions = async (store) => {
-    const roverOptions = document.getElementById('roverOptions')
-    roverOptions.innerHTML = RoverOptions(store)
-
-    store.rovers.forEach(rover => {
-        const el = document.getElementById(rover)
-        el.addEventListener('click', () => {
-            getCameras(rover)
-            getLatestPhotos(rover)
-        })
-    });
+            store.rovers.forEach(rover => {
+                const el = document.getElementById(rover)
+                el.addEventListener('click', () => {
+                    getRoverInfo(rover)
+                    getLatestPhotos(rover)
+                })
+            });
+            break;
+        case 'roverInfoRetrieved':
+            const roverInfo = document.getElementById('roverInfo')
+            roverInfo.innerHTML = RoverInfo(store)
+            break;
+        case 'roverPhotosRetrieved':
+            const photos = document.getElementById('photos')
+            photos.innerHTML = Photos(store)
+            break;
+        default:
+            console.log('Event not recognized')
+            break;
+    }
 }
 
 const RoverOptions = (state) => {
@@ -72,20 +77,15 @@ const Photos = (store) => {
     return photoItems
 }
 
-const updateStoreWithRoverInfo = async (oldStore, newState) => {
+const updateStore = async (oldStore, newState, event) => {
     store = Object.assign(oldStore, newState)
-    renderRoverInfo(store)
+    render(store, event)
 }
 
-const updateStoreWithPhotos = async (oldStore, newState) => {
-    store = Object.assign(oldStore, newState)
-    renderPhotos(store)
-}
-
-const getCameras = async (roverName) => {
+const getRoverInfo = async (roverName) => {
     fetch(`http://localhost:3000/${roverName}/cameras`)
         .then(res => res.json())
-        .then(selectedRover => updateStoreWithRoverInfo(store, { selectedRover }))
+        .then(selectedRover => updateStore(store, { selectedRover }, 'roverInfoRetrieved'))
 }
 
 const getLatestPhotos = async (roverName) => {
@@ -102,5 +102,5 @@ const getLatestPhotos = async (roverName) => {
 
     fetch(`http://localhost:3000/${roverName}/cameras/${maxSol()}`)
         .then(res => res.json())
-        .then(photos => updateStoreWithPhotos(store, { photos }))
+        .then(photos => updateStore(store, { photos }, 'roverPhotosRetrieved'))
 }
