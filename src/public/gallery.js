@@ -10,9 +10,9 @@ window.addEventListener('load', () => {
 
 const root = document.getElementById('root')
 
-const renderCameraList = async (store) => {
-    const cameraOptions = document.getElementById('cameraOptions')
-    cameraOptions.innerHTML = `<p>${store.selectedRover.rover}</p>`
+const renderRoverInfo = async (store) => {
+    const roverInfo = document.getElementById('roverInfo')
+    roverInfo.innerHTML = RoverInfo(store)
 }
 
 const renderPhotos = async (store) => {
@@ -47,12 +47,21 @@ const RoverOptions = (state) => {
     `
 }
 
+const RoverInfo = (state) => {
+    return `
+        <h3>You selected ${state.selectedRover.rover}!</h3>
+        <p>Launch Date: ${state.selectedRover.launchDate}</p>
+        <p>Landing Date: ${state.selectedRover.landingDate}</p>
+        <p>Status: ${state.selectedRover.status}</p>
+    `
+}
+
 const Photos = (store) => {
     let photoItems = "<h3>Latest Photos!</h3>"
 
     for (photo of store.photos.photos) {
         photoItems += `
-            <img src="${photo.img_src}" width="500" height="600">
+            <img src="${photo.img_src}" @media>
             <p>Camera Type: ${photo.camera.full_name} (${photo.camera.name})</p>
             <p>Earth Date: ${photo.earth_date}</p>
             <p>Sol: ${photo.sol}</p>
@@ -63,21 +72,20 @@ const Photos = (store) => {
     return photoItems
 }
 
-const updateStore = async (oldStore, newState) => {
+const updateStoreWithRoverInfo = async (oldStore, newState) => {
     store = Object.assign(oldStore, newState)
-    renderCameraList(store)
+    renderRoverInfo(store)
 }
 
 const updateStoreWithPhotos = async (oldStore, newState) => {
     store = Object.assign(oldStore, newState)
     renderPhotos(store)
-    console.log(store)
 }
 
 const getCameras = async (roverName) => {
     fetch(`http://localhost:3000/${roverName}/cameras`)
         .then(res => res.json())
-        .then(selectedRover => updateStore(store, { selectedRover }))
+        .then(selectedRover => updateStoreWithRoverInfo(store, { selectedRover }))
 }
 
 const getLatestPhotos = async (roverName) => {

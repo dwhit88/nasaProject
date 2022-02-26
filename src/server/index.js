@@ -34,7 +34,10 @@ app.get('/:rover/cameras', async (req, res) => {
         res.send({
             rover: response.rover.name,
             cameras: response.rover.cameras,
-            maxSol: response.rover.max_sol
+            maxSol: response.rover.max_sol,
+            landingDate: response.rover.landing_date,
+            launchDate: response.rover.launch_date,
+            status: response.rover.status
         })
     } catch (err) {
         console.log('error:', err);
