@@ -3,6 +3,11 @@ let store = {
     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
 }
 
+// listening for load event because page should load before any JS is called
+window.addEventListener('load', () => {
+    renderRoverOptions(store)
+})
+
 const root = document.getElementById('root')
 
 const renderCameraList = async (store) => {
@@ -19,39 +24,19 @@ const renderRoverOptions = async (store) => {
     const roverOptions = document.getElementById('roverOptions')
     roverOptions.innerHTML = RoverOptions(store)
 
-    const curiosity = document.getElementById('Curiosity')
-    curiosity.addEventListener('click', () => {
-        getCameras('Curiosity')
-        getLatestPhotos('Curiosity')
-    })
-
-    const opportunity = document.getElementById('Opportunity')
-    opportunity.addEventListener('click', () => {
-        getCameras('Opportunity')
-        getLatestPhotos('Opportunity')
-    })
-
-    const spirit = document.getElementById('Spirit')
-    spirit.addEventListener('click', () => {
-        getCameras('Spirit')
-        getLatestPhotos('Spirit')
-    })
+    store.rovers.forEach(rover => {
+        const el = document.getElementById(rover)
+        el.addEventListener('click', () => {
+            getCameras(rover)
+            getLatestPhotos(rover)
+        })
+    });
 }
 
-// listening for load event because page should load before any JS is called
-window.addEventListener('load', () => {
-    renderRoverOptions(store)
-})
-
-const render = async (root, state) => {
-    root.innerHTML = App(state)
-}
-
-const  RoverOptions = (state) => {
-    let { rovers } = state
+const RoverOptions = (state) => {
     let roverButtons = "<h3>Select a rover!</h3>"
 
-    for (rover of rovers) {
+    for (rover of state.rovers) {
         roverButtons += `<button type="button" id="${rover}">${rover}</button>`
     }
 
@@ -67,6 +52,7 @@ const Photos = (store) => {
 
     for (photo of store.photos.photos) {
         photoItems += `
+            <img src="${photo.img_src}" width="500" height="600">
             <p>Camera Type: ${photo.camera.full_name} (${photo.camera.name})</p>
             <p>Earth Date: ${photo.earth_date}</p>
             <p>Sol: ${photo.sol}</p>
@@ -85,6 +71,7 @@ const updateStore = async (oldStore, newState) => {
 const updateStoreWithPhotos = async (oldStore, newState) => {
     store = Object.assign(oldStore, newState)
     renderPhotos(store)
+    console.log(store)
 }
 
 const getCameras = async (roverName) => {
