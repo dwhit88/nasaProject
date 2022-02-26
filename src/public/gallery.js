@@ -29,8 +29,28 @@ const render = async (store, event) => {
             roverInfo.innerHTML = RoverInfo(store)
             break;
         case 'roverPhotosRetrieved':
+            const cameraOptions = document.getElementById('cameraOptions')
+            cameraOptions.innerHTML = CameraOptions(store)
+
+            const cameraButtons = document.querySelectorAll('.camera')
+
+            // const cameraButtons = document.getElementsByClassName('camera')
+            // console.log(store)
+            cameraButtons.forEach(button => {
+                // console.log(store)
+                button.addEventListener('click', () => {
+                    // console.log(button.innerHTML)
+                    photosByCameraType(button.innerHTML)
+                })
+            })
+
             const photos = document.getElementById('photos')
             photos.innerHTML = Photos(store)
+            break;
+        case 'filteredByCamera':
+            // const photos = document.getElementById('photos')
+            // console.log(store)
+            document.getElementById('photos').innerHTML = Photos(store)
             break;
         default:
             console.log('Event not recognized')
@@ -77,7 +97,46 @@ const Photos = (store) => {
     return photoItems
 }
 
+const CameraOptions = (state) => {
+    let cameraOptions = "<h3>Filter by camera</h3>"
+
+    for (camera of availableCameras(state.photos.photos)) {
+        cameraOptions += `<button type="button" id="${camera}" class="camera">${camera}</button>`
+    }
+
+    return `
+        <section>
+            ${cameraOptions}
+        </section>
+    `
+}
+
+const availableCameras = (photos) => {
+    return photos.reduce((total, currValue) => {
+        if (!total.includes(currValue.camera.full_name)) {
+            total.push(currValue.camera.full_name)
+        }
+        return total
+    }, [])
+}
+
+const photosByCameraType = (cameraType) => {
+    // console.log(cameraType)
+    // console.log(store.photos.photos[0].camera.full_name)
+    let filteredPhotos = store.photos.photos.filter(photo => photo.camera.full_name == cameraType)
+
+    // console.log(filteredPhotos)
+
+    let photos = {
+        photos: filteredPhotos
+    }
+    // console.log(photos)
+
+    updateStore(store, { photos }, 'filteredByCamera')
+}
+
 const updateStore = async (oldStore, newState, event) => {
+    //Need to do Immutable state here
     store = Object.assign(oldStore, newState)
     render(store, event)
 }
