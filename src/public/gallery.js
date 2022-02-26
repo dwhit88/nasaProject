@@ -13,7 +13,6 @@ const renderCameraList = async (store) => {
 const renderPhotos = async (store) => {
     const photos = document.getElementById('photos')
     photos.innerHTML = Photos(store)
-    console.log(store)
 }
 
 const renderRoverOptions = async (store) => {
@@ -29,11 +28,13 @@ const renderRoverOptions = async (store) => {
     const opportunity = document.getElementById('Opportunity')
     opportunity.addEventListener('click', () => {
         getCameras('Opportunity')
+        getLatestPhotos('Opportunity')
     })
 
     const spirit = document.getElementById('Spirit')
     spirit.addEventListener('click', () => {
         getCameras('Spirit')
+        getLatestPhotos('Spirit')
     })
 }
 
@@ -48,12 +49,15 @@ const render = async (root, state) => {
 
 const  RoverOptions = (state) => {
     let { rovers } = state
+    let roverButtons = "<h3>Select a rover!</h3>"
+
+    for (rover of rovers) {
+        roverButtons += `<button type="button" id="${rover}">${rover}</button>`
+    }
+
     return `
         <section>
-            <h3>Select a rover!</h3>
-            <button type="button" id="${rovers[0]}">${rovers[0]}</button>
-            <button type="button" id="${rovers[1]}">${rovers[1]}</button>
-            <button type="button" id="${rovers[2]}">${rovers[2]}</button>
+            ${roverButtons}
         </section>
     `
 }
@@ -76,12 +80,10 @@ const Photos = (store) => {
 const updateStore = async (oldStore, newState) => {
     store = Object.assign(oldStore, newState)
     renderCameraList(store)
-    console.log(store)
 }
 
 const updateStoreWithPhotos = async (oldStore, newState) => {
     store = Object.assign(oldStore, newState)
-    console.log(store)
     renderPhotos(store)
 }
 
@@ -91,8 +93,19 @@ const getCameras = async (roverName) => {
         .then(selectedRover => updateStore(store, { selectedRover }))
 }
 
-const getLatestPhotos = async (roverName, maxSol = 3395) => {
-    fetch(`http://localhost:3000/${roverName}/cameras/${maxSol}`)
+const getLatestPhotos = async (roverName) => {
+    const maxSol = () => {
+        switch (roverName) {
+            case 'Opportunity':
+                return 5111
+            case 'Spirit':
+                return 2208
+            case 'Curiosity':
+                return 3395
+        }
+    }
+
+    fetch(`http://localhost:3000/${roverName}/cameras/${maxSol()}`)
         .then(res => res.json())
         .then(photos => updateStoreWithPhotos(store, { photos }))
 }
