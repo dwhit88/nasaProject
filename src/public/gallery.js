@@ -1,7 +1,14 @@
-let store = {
+// let store = {
+//     user: { name: "Student" },
+//     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
+// }
+const Immutable = require('immutable');
+// import Immutable from 'immutable';
+
+const store = Immutable.Map({
     user: { name: "Student" },
     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
-}
+})
 
 // listening for load event because page should load before any JS is called
 window.addEventListener('load', () => {
@@ -33,13 +40,8 @@ const render = async (store, event) => {
             cameraOptions.innerHTML = CameraOptions(store)
 
             const cameraButtons = document.querySelectorAll('.camera')
-
-            // const cameraButtons = document.getElementsByClassName('camera')
-            // console.log(store)
             cameraButtons.forEach(button => {
-                // console.log(store)
                 button.addEventListener('click', () => {
-                    // console.log(button.innerHTML)
                     photosByCameraType(button.innerHTML)
                 })
             })
@@ -48,8 +50,6 @@ const render = async (store, event) => {
             photos.innerHTML = Photos(store)
             break;
         case 'filteredByCamera':
-            // const photos = document.getElementById('photos')
-            // console.log(store)
             document.getElementById('photos').innerHTML = Photos(store)
             break;
         default:
@@ -121,30 +121,26 @@ const availableCameras = (photos) => {
 }
 
 const photosByCameraType = (cameraType) => {
-    // console.log(cameraType)
-    // console.log(store.photos.photos[0].camera.full_name)
-    let filteredPhotos = store.photos.photos.filter(photo => photo.camera.full_name == cameraType)
-
-    // console.log(filteredPhotos)
 
     let photos = {
-        photos: filteredPhotos
+        photos: store.photos.photos.filter(photo => photo.camera.full_name == cameraType)
     }
-    // console.log(photos)
 
     updateStore(store, { photos }, 'filteredByCamera')
 }
 
 const updateStore = async (oldStore, newState, event) => {
     //Need to do Immutable state here
-    store = Object.assign(oldStore, newState)
-    render(store, event)
+    const updatedStore = store.merge(newState)
+    // store = Object.assign(oldStore, newState)
+    render(updatedStore, event)
 }
 
 const getRoverInfo = async (roverName) => {
     fetch(`http://localhost:3000/${roverName}/cameras`)
         .then(res => res.json())
-        .then(selectedRover => updateStore(store, { selectedRover }, 'roverInfoRetrieved'))
+        .then(selectedRover => updateStore({ selectedRover }, 'roverInfoRetrieved'))
+        // .then(selectedRover => updateStore(store, { selectedRover }, 'roverInfoRetrieved'))
 }
 
 const getLatestPhotos = async (roverName) => {
@@ -161,5 +157,6 @@ const getLatestPhotos = async (roverName) => {
 
     fetch(`http://localhost:3000/${roverName}/cameras/${maxSol()}`)
         .then(res => res.json())
-        .then(photos => updateStore(store, { photos }, 'roverPhotosRetrieved'))
+        .then(photos => updateStore({ photos }, 'roverPhotosRetrieved'))
+        // .then(photos => updateStore(store, { photos }, 'roverPhotosRetrieved'))
 }
