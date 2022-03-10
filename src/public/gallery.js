@@ -3,10 +3,10 @@
 //     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
 // }
 
-const Immutable = require('immutable');
-// import Immutable from 'immutable';
+// const Immutable = require('immutable');
+import { Map } from 'immutable';
 
-const store = Immutable.Map({
+const store = Map({
     user: { name: "Student" },
     rovers: ['Curiosity', 'Opportunity', 'Spirit'],
 })
@@ -54,7 +54,7 @@ const render = async (store, event) => {
             document.getElementById('photos').innerHTML = Photos(store)
             break;
         default:
-            console.log('Event not recognized')
+            console.log(`${event} Event not recognized`)
             break;
     }
 }
@@ -135,6 +135,7 @@ const updateStore = async (oldStore, newState, event) => {
     const updatedStore = store.merge(newState)
     // store = Object.assign(oldStore, newState)
     render(updatedStore, event)
+    // render(store, event)
 }
 
 const getRoverInfo = async (roverName) => {
