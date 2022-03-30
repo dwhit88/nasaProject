@@ -23,6 +23,7 @@ const render = async (store, event) => {
                     getLatestPhotos(rover)
                 })
             });
+
             break;
         case 'roverInfoRetrieved':
             const roverInfo = document.getElementById('roverInfo')
@@ -31,25 +32,18 @@ const render = async (store, event) => {
         case 'roverPhotosRetrieved':
             const cameraOptions = document.getElementById('cameraOptions')
             cameraOptions.innerHTML = CameraOptions(store)
-
             const cameraButtons = document.querySelectorAll('.camera')
-
-            // const cameraButtons = document.getElementsByClassName('camera')
-            // console.log(store)
             cameraButtons.forEach(button => {
-                // console.log(store)
                 button.addEventListener('click', () => {
-                    // console.log(button.innerHTML)
                     photosByCameraType(button.innerHTML)
                 })
             })
 
             const photos = document.getElementById('photos')
-            photos.innerHTML = Photos(store)
+            photos.innerHTML = Photos(store.photos.photos)
             break;
         case 'filteredByCamera':
-            // const photos = document.getElementById('photos')
-            // console.log(store)
+            // Store = filteredPhotos
             document.getElementById('photos').innerHTML = Photos(store)
             break;
         default:
@@ -60,7 +54,6 @@ const render = async (store, event) => {
 
 const RoverOptions = (state) => {
     let roverButtons = "<h3>Select a rover!</h3>"
-
     for (rover of state.rovers) {
         roverButtons += `<button type="button" id="${rover}">${rover}</button>`
     }
@@ -81,10 +74,9 @@ const RoverInfo = (state) => {
     `
 }
 
-const Photos = (store) => {
+const Photos = (photos) => {
     let photoItems = "<h3>Latest Photos!</h3>"
-
-    for (photo of store.photos.photos) {
+    for (photo of photos) {
         photoItems += `
             <img src="${photo.img_src}" @media>
             <p>Camera Type: ${photo.camera.full_name} (${photo.camera.name})</p>
@@ -99,7 +91,6 @@ const Photos = (store) => {
 
 const CameraOptions = (state) => {
     let cameraOptions = "<h3>Filter by camera</h3>"
-
     for (camera of availableCameras(state.photos.photos)) {
         cameraOptions += `<button type="button" id="${camera}" class="camera">${camera}</button>`
     }
@@ -121,18 +112,8 @@ const availableCameras = (photos) => {
 }
 
 const photosByCameraType = (cameraType) => {
-    // console.log(cameraType)
-    // console.log(store.photos.photos[0].camera.full_name)
     let filteredPhotos = store.photos.photos.filter(photo => photo.camera.full_name == cameraType)
-
-    // console.log(filteredPhotos)
-
-    let photos = {
-        photos: filteredPhotos
-    }
-    // console.log(photos)
-
-    updateStore(store, { photos }, 'filteredByCamera')
+    render(filteredPhotos, 'filteredByCamera')
 }
 
 const updateStore = async (oldStore, newState, event) => {
