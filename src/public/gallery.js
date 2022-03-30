@@ -14,7 +14,7 @@ const render = async (store, event) => {
     switch (event) {
         case 'load':
             const roverOptions = document.getElementById('roverOptions')
-            roverOptions.innerHTML = RoverOptions(store)
+            roverOptions.innerHTML = RoverOptions(store.rovers)
 
             store.rovers.forEach(rover => {
                 const el = document.getElementById(rover)
@@ -27,11 +27,11 @@ const render = async (store, event) => {
             break;
         case 'roverInfoRetrieved':
             const roverInfo = document.getElementById('roverInfo')
-            roverInfo.innerHTML = RoverInfo(store)
+            roverInfo.innerHTML = RoverInfo(store.selectedRover)
             break;
         case 'roverPhotosRetrieved':
             const cameraOptions = document.getElementById('cameraOptions')
-            cameraOptions.innerHTML = CameraOptions(store)
+            cameraOptions.innerHTML = CameraOptions(store.photos.photos)
             const cameraButtons = document.querySelectorAll('.camera')
             cameraButtons.forEach(button => {
                 button.addEventListener('click', () => {
@@ -52,9 +52,9 @@ const render = async (store, event) => {
     }
 }
 
-const RoverOptions = (state) => {
+const RoverOptions = (rovers) => {
     let roverButtons = "<h3>Select a rover!</h3>"
-    for (rover of state.rovers) {
+    for (rover of rovers) {
         roverButtons += `<button type="button" id="${rover}">${rover}</button>`
     }
 
@@ -65,12 +65,12 @@ const RoverOptions = (state) => {
     `
 }
 
-const RoverInfo = (state) => {
+const RoverInfo = (selectedRover) => {
     return `
-        <h3>You selected ${state.selectedRover.rover}!</h3>
-        <p>Launch Date: ${state.selectedRover.launchDate}</p>
-        <p>Landing Date: ${state.selectedRover.landingDate}</p>
-        <p>Status: ${state.selectedRover.status}</p>
+        <h3>You selected ${selectedRover.rover}!</h3>
+        <p>Launch Date: ${selectedRover.launchDate}</p>
+        <p>Landing Date: ${selectedRover.landingDate}</p>
+        <p>Status: ${selectedRover.status}</p>
     `
 }
 
@@ -78,7 +78,7 @@ const Photos = (photos) => {
     let photoItems = "<h3>Latest Photos!</h3>"
     for (photo of photos) {
         photoItems += `
-            <img src="${photo.img_src}" @media>
+            <img src="${photo.img_src}" style="max-width: 100%">
             <p>Camera Type: ${photo.camera.full_name} (${photo.camera.name})</p>
             <p>Earth Date: ${photo.earth_date}</p>
             <p>Sol: ${photo.sol}</p>
@@ -89,9 +89,9 @@ const Photos = (photos) => {
     return photoItems
 }
 
-const CameraOptions = (state) => {
+const CameraOptions = (photos) => {
     let cameraOptions = "<h3>Filter by camera</h3>"
-    for (camera of availableCameras(state.photos.photos)) {
+    for (camera of availableCameras(photos)) {
         cameraOptions += `<button type="button" id="${camera}" class="camera">${camera}</button>`
     }
 
