@@ -32,12 +32,14 @@ app.get('/:rover/cameras', async (req, res) => {
         let response = await fetch(`${nasaPathMarsPhotos}/rovers/${req.param('rover')}?api_key=${process.env.API_KEY}`)
             .then(res => res.json())
         res.send({
-            rover: response.rover.name,
-            cameras: response.rover.cameras,
-            maxSol: response.rover.max_sol,
-            landingDate: response.rover.landing_date,
-            launchDate: response.rover.launch_date,
-            status: response.rover.status
+            roverData: {
+                rover: response.rover.name,
+                cameras: response.rover.cameras,
+                maxSol: response.rover.max_sol,
+                landingDate: response.rover.landing_date,
+                launchDate: response.rover.launch_date,
+                status: response.rover.status
+            }
         })
     } catch (err) {
         console.log('error:', err);
