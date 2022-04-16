@@ -3,8 +3,7 @@ let store = Immutable.Map({
 })
 
 window.addEventListener('load', () => {
-    const roverOptions = document.getElementById('roverOptions')
-    roverOptions.innerHTML = RoverOptions()
+    renderHTML('roverOptions', RoverOptions())
 
     const roverButtons = store.get('rovers').reduce((total, curr) => {
         total.push(document.getElementById(curr))
@@ -17,26 +16,22 @@ window.addEventListener('load', () => {
     })
 })
 
-const root = document.getElementById('root')
-
 const roverInfoRetrieved = (roverInfo) => {
-    const retrievedRoverInfo = roverInfo.get('roverData')
-    roverInfo.innerHTML = RoverInfo(retrievedRoverInfo)
+    const retrievedRoverInfo = roverInfo.get('roverData').roverData
+    renderHTML('roverInfo', RoverInfo(retrievedRoverInfo))
 }
 
 const roverPhotosRetrieved = (fetchedPhotos) => {
-    const cameraOptions = document.getElementById('cameraOptions')
     const retrievedPhotos = fetchedPhotos.get('photos').photos
-    cameraOptions.innerHTML = CameraOptions(availableCameras(retrievedPhotos))
+    renderHTML('cameraOptions', CameraOptions(availableCameras(retrievedPhotos)))
     const cameraButtons = document.querySelectorAll('.camera')
-    
+
     setListener(cameraButtons, (button) => {
         let filteredPhotos = retrievedPhotos.filter(photo => photo.camera.full_name == button.textContent)
-        document.getElementById('photos').innerHTML = Photos(filteredPhotos)
+        renderHTML('photos', Photos(filteredPhotos))
     })
 
-    const photos = document.getElementById('photos')
-    photos.innerHTML = Photos(retrievedPhotos)
+    renderHTML('photos', Photos(retrievedPhotos))
 }
 
 const setListener = (buttons, action) => {
@@ -45,6 +40,10 @@ const setListener = (buttons, action) => {
             action(button)
         })
     })
+}
+
+const renderHTML = (htmlTag, action) => {
+    document.getElementById(htmlTag).innerHTML = action
 }
 
 const RoverOptions = () => {
@@ -106,19 +105,15 @@ const availableCameras = (photos) => {
     }, [])
 }
 
-const photosByCameraType = (cameraType, retrievedPhotos) => {
-    let filteredPhotos = retrievedPhotos.filter(photo => photo.camera.full_name == cameraType)
-    document.getElementById('photos').innerHTML = Photos(filteredPhotos)
-}
-
-function setNewStore(prop) {
-    return store.merge(Immutable.Map(prop))
+const processData = (data, action) => {
+    let newStore = store.merge(Immutable.Map(data))
+    action(newStore)
 }
 
 const getRoverInfo = async (roverName) => {
     fetch(`http://localhost:3000/${roverName}/cameras`)
         .then(res => res.json())
-        .then(roverData => roverInfoRetrieved(setNewStore({ roverData })))
+        .then(roverData => processData({ roverData }, roverInfoRetrieved))
 }
 
 const getLatestPhotos = async (roverName) => {
@@ -135,5 +130,5 @@ const getLatestPhotos = async (roverName) => {
 
     fetch(`http://localhost:3000/${roverName}/cameras/${maxSol(roverName)}`)
         .then(res => res.json())
-        .then(photos => roverPhotosRetrieved(setNewStore({ photos })))
+        .then(photos => processData({ photos }, roverPhotosRetrieved))
 }
