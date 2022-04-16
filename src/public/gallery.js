@@ -16,13 +16,13 @@ window.addEventListener('load', () => {
     })
 })
 
-const roverInfoRetrieved = (roverInfo) => {
-    const retrievedRoverInfo = roverInfo.get('roverData').roverData
+const roverInfoRetrieved = (updatedStore) => {
+    const retrievedRoverInfo = updatedStore.get('roverData').roverData
     renderHTML('roverInfo', RoverInfo(retrievedRoverInfo))
 }
 
-const roverPhotosRetrieved = (fetchedPhotos) => {
-    const retrievedPhotos = fetchedPhotos.get('photos').photos
+const roverPhotosRetrieved = (updatedStore) => {
+    const retrievedPhotos = updatedStore.get('photos').photos
     renderHTML('cameraOptions', CameraOptions(availableCameras(retrievedPhotos)))
     const cameraButtons = document.querySelectorAll('.camera')
 
