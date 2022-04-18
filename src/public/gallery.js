@@ -1,60 +1,54 @@
-let store = {
-    user: { name: "Student" },
-    rovers: ['Curiosity', 'Opportunity', 'Spirit'],
-}
-
-// listening for load event because page should load before any JS is called
-window.addEventListener('load', () => {
-    render(store, 'load')
+let store = Immutable.Map({
+    rovers: ['Curiosity', 'Opportunity', 'Spirit']
 })
 
-const root = document.getElementById('root')
+window.addEventListener('load', () => {
+    renderHTML('roverOptions', RoverOptions())
 
-const render = async (store, event) => {
-    switch (event) {
-        case 'load':
-            const roverOptions = document.getElementById('roverOptions')
-            roverOptions.innerHTML = RoverOptions(store.rovers)
+    const roverButtons = store.get('rovers').reduce((total, curr) => {
+        total.push(document.getElementById(curr))
+        return total
+    }, [])
 
-            store.rovers.forEach(rover => {
-                const el = document.getElementById(rover)
-                el.addEventListener('click', () => {
-                    getRoverInfo(rover)
-                    getLatestPhotos(rover)
-                })
-            });
+    setListener(roverButtons, (button) => {
+        getRoverInfo(button.textContent)
+        getLatestPhotos(button.textContent)
+    })
+})
 
-            break;
-        case 'roverInfoRetrieved':
-            const roverInfo = document.getElementById('roverInfo')
-            roverInfo.innerHTML = RoverInfo(store.selectedRover)
-            break;
-        case 'roverPhotosRetrieved':
-            const cameraOptions = document.getElementById('cameraOptions')
-            cameraOptions.innerHTML = CameraOptions(store.photos.photos)
-            const cameraButtons = document.querySelectorAll('.camera')
-            cameraButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    photosByCameraType(button.innerHTML)
-                })
-            })
-
-            const photos = document.getElementById('photos')
-            photos.innerHTML = Photos(store.photos.photos)
-            break;
-        case 'filteredByCamera':
-            // Store = filteredPhotos
-            document.getElementById('photos').innerHTML = Photos(store)
-            break;
-        default:
-            console.log('Event not recognized')
-            break;
-    }
+const roverInfoRetrieved = (updatedStore) => {
+    const retrievedRoverInfo = updatedStore.get('roverData').roverData
+    renderHTML('roverInfo', RoverInfo(retrievedRoverInfo))
 }
 
-const RoverOptions = (rovers) => {
+const roverPhotosRetrieved = (updatedStore) => {
+    const retrievedPhotos = updatedStore.get('photos').photos
+    renderHTML('cameraOptions', CameraOptions(availableCameras(retrievedPhotos)))
+    const cameraButtons = document.querySelectorAll('.camera')
+
+    setListener(cameraButtons, (button) => {
+        let filteredPhotos = retrievedPhotos.filter(photo => photo.camera.full_name == button.textContent)
+        renderHTML('photos', Photos(filteredPhotos))
+    })
+
+    renderHTML('photos', Photos(retrievedPhotos))
+}
+
+const setListener = (buttons, action) => {
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            action(button)
+        })
+    })
+}
+
+const renderHTML = (htmlTag, action) => {
+    document.getElementById(htmlTag).innerHTML = action
+}
+
+const RoverOptions = () => {
     let roverButtons = "<h3>Select a rover!</h3>"
-    for (rover of rovers) {
+    for (rover of store.get('rovers')) {
         roverButtons += `<button type="button" id="${rover}">${rover}</button>`
     }
 
@@ -89,9 +83,9 @@ const Photos = (photos) => {
     return photoItems
 }
 
-const CameraOptions = (photos) => {
+const CameraOptions = (cameras) => {
     let cameraOptions = "<h3>Filter by camera</h3>"
-    for (camera of availableCameras(photos)) {
+    for (camera of cameras) {
         cameraOptions += `<button type="button" id="${camera}" class="camera">${camera}</button>`
     }
 
@@ -111,21 +105,15 @@ const availableCameras = (photos) => {
     }, [])
 }
 
-const photosByCameraType = (cameraType) => {
-    let filteredPhotos = store.photos.photos.filter(photo => photo.camera.full_name == cameraType)
-    render(filteredPhotos, 'filteredByCamera')
-}
-
-const updateStore = async (oldStore, newState, event) => {
-    //Need to do Immutable state here
-    store = Object.assign(oldStore, newState)
-    render(store, event)
+const processData = (data, action) => {
+    let newStore = store.merge(Immutable.Map(data))
+    action(newStore)
 }
 
 const getRoverInfo = async (roverName) => {
     fetch(`http://localhost:3000/${roverName}/cameras`)
         .then(res => res.json())
-        .then(selectedRover => updateStore(store, { selectedRover }, 'roverInfoRetrieved'))
+        .then(roverData => processData({ roverData }, roverInfoRetrieved))
 }
 
 const getLatestPhotos = async (roverName) => {
@@ -140,7 +128,7 @@ const getLatestPhotos = async (roverName) => {
         }
     }
 
-    fetch(`http://localhost:3000/${roverName}/cameras/${maxSol()}`)
+    fetch(`http://localhost:3000/${roverName}/cameras/${maxSol(roverName)}`)
         .then(res => res.json())
-        .then(photos => updateStore(store, { photos }, 'roverPhotosRetrieved'))
+        .then(photos => processData({ photos }, roverPhotosRetrieved))
 }
